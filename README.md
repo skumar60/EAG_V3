@@ -1,2 +1,3 @@
 # EAG_V3
-AI Training assignment
+assignment #1 Video link
+https://youtu.be/5z7Tj0ZZo30
