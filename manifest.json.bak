@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Agent Logs Paster",
+  "version": "1.0.0",
+  "description": "Run an AI agent task and paste logs into the active page.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["https://api.openai.com/*"],
+  "action": {
+    "default_title": "Run Agent and Paste Logs",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "background.js"
+  }
+}

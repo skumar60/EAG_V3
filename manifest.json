@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "AI Agent Logs",
+  "version": "1.0",
+  "description": "Run Python AI agent and copy logs",
+
+  "action": {
+    "default_popup": "popup.html"
+  },
+
+  "permissions": ["activeTab", "scripting"],
+
+  "host_permissions": [
+    "http://localhost:5000/*"
+  ]
+}

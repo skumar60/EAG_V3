@@ -1,0 +1,228 @@
+"""
+Final Stable Agent using OpenAI
+
+pip install openai python-dotenv
+"""
+
+from openai import OpenAI
+import json
+import re
+import math
+import os
+import time
+from dotenv import load_dotenv
+
+# ============================================================
+# Config
+# ============================================================
+load_dotenv()
+
+OPENAI_API_KEY = "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";
+OPENAI_MODEL = "gpt-4.1-mini"
+THROTTLE_SECONDS = 2
+
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+
+# ============================================================
+# LLM Call
+# ============================================================
+def call_llm(prompt: str) -> str:
+    time.sleep(THROTTLE_SECONDS)
+
+    response = client.chat.completions.create(
+        model=OPENAI_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0,
+        response_format={"type": "json_object"}
+    )
+
+    return response.choices[0].message.content
+
+
+# ============================================================
+# System Prompt (Improved)
+# ============================================================
+system_prompt = """You are a smart AI agent that uses tools to answer questions.
+
+TOOLS:
+1. calculate(expression)
+2. get_weather(city)
+3. search_notes(query)
+
+RULES:
+- Always respond in JSON only
+- Use tools when needed
+- Always use calculate for math
+- Replace ^ with ** for power
+- Use math.sqrt() for square root
+- After getting a tool result, provide final answer
+- DO NOT call same tool repeatedly with same arguments
+
+FORMAT:
+
+Tool call:
+{"tool_name": "calculate", "tool_arguments": {"expression": "2**10"}}
+
+Final answer:
+{"answer": "result here"}
+"""
+
+
+# ============================================================
+# Tools
+# ============================================================
+
+def calculate(expression: str) -> str:
+    try:
+        expression = expression.replace("^", "**")
+        expression = expression.replace("sqrt(", "math.sqrt(")
+
+        allowed = {
+            "math": math,
+            "abs": abs,
+            "round": round,
+            "pow": pow,
+            "sum": sum,
+        }
+
+        result = eval(expression, {"__builtins__": {}}, allowed)
+        return json.dumps({"result": str(result)})
+
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+def get_weather(city: str) -> str:
+    data = {
+        "Mumbai": {"temp": "32°C", "condition": "Humid", "humidity": "78%"},
+        "Delhi": {"temp": "28°C", "condition": "Clear", "humidity": "45%"},
+        "London": {"temp": "15°C", "condition": "Rainy", "humidity": "85%"},
+        "Tokyo": {"temp": "26°C", "condition": "Windy", "humidity": "60%"},
+    }
+    return json.dumps(data.get(city, {"error": "City not found"}))
+
+
+def search_notes(query: str) -> str:
+    notes = [
+        {"title": "Travel", "content": "Tokyo trip in December"},
+        {"title": "Ideas", "content": "Build AI agent system"},
+    ]
+
+    query_words = query.lower().split()
+
+    results = []
+    for note in notes:
+        text = (note["title"] + " " + note["content"]).lower()
+
+        # Match if ANY word matches
+        if any(word in text for word in query_words):
+            results.append(note)
+
+    if results:
+        return json.dumps(results)
+
+    return json.dumps({"result": "No match"})
+
+tools = {
+    "calculate": calculate,
+    "get_weather": get_weather,
+    "search_notes": search_notes,
+}
+
+
+# ============================================================
+# Parser
+# ============================================================
+
+def parse_llm_response(text: str) -> dict:
+    try:
+        return json.loads(text)
+    except:
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        if match:
+            return json.loads(match.group())
+        raise ValueError("Invalid JSON")
+
+
+# ============================================================
+# Agent Loop
+# ============================================================
+
+def run_agent(user_query: str, max_iterations: int = 7):
+    print(f"\nUser: {user_query}")
+    logs = []
+    logs.append(f"User: {user_query}")
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_query},
+    ]
+
+    last_response = None
+
+    for i in range(max_iterations):
+        print(f"\n--- Iteration {i+1} ---")
+
+        # Build prompt
+        prompt = ""
+        for m in messages:
+            if m["role"] == "system":
+                prompt += m["content"] + "\n\n"
+            elif m["role"] == "user":
+                prompt += f"User: {m['content']}\n\n"
+            elif m["role"] == "assistant":
+                prompt += f"Assistant: {m['content']}\n\n"
+            elif m["role"] == "tool":
+                prompt += f"Tool Result: {m['content']}\n\n"
+
+        response_text = call_llm(prompt)
+        print("LLM:", response_text)
+        logs.append(f"LLM: {response_text}")
+
+        # Loop protection
+        if response_text == last_response:
+            print("⚠️ Repeated response detected. Stopping.")
+            break
+        last_response = response_text
+
+        parsed = parse_llm_response(response_text)
+
+        # Final answer
+        if "answer" in parsed:
+            print("\n✅ Final Answer:", parsed["answer"])
+            return parsed["answer"]
+
+        # Tool call
+        if "tool_name" in parsed:
+            tool_name = parsed["tool_name"]
+            args = parsed.get("tool_arguments", {})
+
+            print(f"→ Calling {tool_name} with {args}")
+            logs.append(f"→ Calling {tool_name} with {args}")
+
+            if tool_name not in tools:
+                messages.append({"role": "tool", "content": "Invalid tool"})
+                continue
+
+            result = tools[tool_name](**args)
+            print("→ Result:", result)
+
+
+
+            messages.append({"role": "assistant", "content": response_text})
+            messages.append({"role": "tool", "content": result})
+
+    print("❌ Max iterations reached")
+   
+    return "\n".join(logs)
+
+
+# ============================================================
+# Run
+# ============================================================
+
+if __name__ == "__main__":
+    run_agent("What is the weather in Mumbai?")
+    run_agent("What is 2^10 + sqrt(144)?")
+    run_agent("Search my notes for travel and check weather there")
+    run_agent("What is the capital of France?")

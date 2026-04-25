@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Agent Logs Paster</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <p class="note">
+    Runs an AI agent task and pastes logs into the currently focused input on the page.
+    Set API key in <a id="openOptions" href="#">Options</a>.
+  </p>
+  <label for="taskInput">Task for agent</label>
+  <textarea id="taskInput" rows="5" placeholder="Example: Analyze this bug and return step-by-step logs."></textarea>
+  <button type="button" id="runBtn" class="btn">Run agent and paste logs</button>
+  <p id="status" class="status" role="status"></p>
+  <script src="popup.js"></script>
+</body>
+</html>
+
