@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 # ============================================================
 load_dotenv()
 
-OPENAI_API_KEY = "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";
+OPENAI_API_KEY = "***";
 OPENAI_MODEL = "gpt-4.1-mini"
 THROTTLE_SECONDS = 2
 
