@@ -1,26 +1,38 @@
-# ReAct Agent Assignment
+below is the four target query that is kept in agent6.py file--
 
-## Install
 
-uv sync
+    # -------------------------------------------------
+    # QUERY 1
+    # -------------------------------------------------
+    query1 = (
+        "Fetch https://en.wikipedia.org/wiki/Claude_Shannon "
+        "and tell me his birth date, death date, and "
+        "three key contributions to information theory."
+    )
 
-## Set OpenAI API Key
+    # -------------------------------------------------
+    # QUERY 2
+    # -------------------------------------------------
+    query2 = (
+        "Find 3 family-friendly things to do in Tokyo "
+        "this weekend. Check Saturday's weather "
+        "forecast there and tell me which one "
+        "is most appropriate."
+    )
+    # -------------------------------------------------
+    # QUERY 3
+    # -------------------------------------------------
+    query3 = (
+        "Run 1: My mom's birthday is 15 May 2026. Remember that and give me  a calendar reminder for two weeks before and on the day. Run 2: When is mom's birthday?"
+    )
 
-PowerShell:
-$env:OPENAI_API_KEY="sk-..."
+    # -------------------------------------------------
+    # QUERY 4
+    # -------------------------------------------------
+    query4 = (
+        "Search for 'Python asyncio best practices', read the top 3 results,and give me a short numbered list of the advice they agree on."
+    )
 
-## Run MCP Server
-
-uv run python mcp_server.py
-
-## Run Agent
-
-uv run python agent6.py
-
-## Clean State
-
-Delete:
-state/
 
 
 console output==
